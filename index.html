@@ -1,1 +1,54 @@
 
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="color-scheme" content="light">
+  <title>Клиника Нестерова — настройки связи</title>
+  <script src="https://telegram.org/js/telegram-web-app.js?65"></script>
+  <script src="https://st.max.ru/js/max-web-app.js"></script>
+  <style>
+    :root{--ink:#173b36;--muted:#60746f;--brand:#17695c;--soft:#edf6f3;--line:#d8e6e2;--white:#fff;--danger:#9d3434}
+    *{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-size:18px;line-height:1.4}
+    main{max-width:620px;margin:auto;padding:24px 18px 44px}.brand{text-align:center;font-size:14px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+    h1{font-size:30px;line-height:1.12;text-align:center;margin:14px 0 9px}.lead{text-align:center;color:var(--muted);margin:0 0 24px}.card{background:var(--white);border:1px solid var(--line);border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 28px rgba(23,59,54,.06)}
+    label.title{display:block;font-weight:750;margin:0 0 8px}input{width:100%;min-height:54px;border:2px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);background:#fff}input:focus{outline:none;border-color:var(--brand)}
+    .hint{font-size:15px;color:var(--muted);margin:7px 0 0}.question h2{font-size:21px;margin:0 0 5px}.question p{font-size:16px;color:var(--muted);margin:0 0 14px}.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{min-height:58px;border:2px solid var(--line);border-radius:15px;background:#fff;color:var(--ink);font-size:17px;font-weight:700}.choice.active{background:var(--brand);border-color:var(--brand);color:#fff}.choice.no.active{background:#536762;border-color:#536762}
+    .confirm{width:100%;min-height:62px;margin-top:14px;border:0;border-radius:17px;background:var(--brand);color:#fff;font-size:19px;font-weight:800}.confirm:disabled{opacity:.45}.error{display:none;color:var(--danger);background:#fff0f0;border-radius:13px;padding:12px;margin:12px 0;font-size:15px}.success{display:none;text-align:center;padding:50px 10px}.success .icon{font-size:56px}.success h2{font-size:28px}.required{color:#b05a43}
+  </style>
+</head>
+<body><main>
+  <section id="form">
+    <div class="brand">Клиника Нестерова</div>
+    <h1>Настройте связь с клиникой</h1>
+    <p class="lead">Только необходимые данные. Это займёт около минуты.</p>
+    <div class="card"><label class="title" for="name">Фамилия, имя и отчество <span class="required">*</span></label><input id="name" autocomplete="name" placeholder="Иванов Иван Петрович"><p class="hint">Как в карточке клиники</p></div>
+    <div class="card"><label class="title" for="phone">Номер телефона <span class="required">*</span></label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 999 123-45-67"><p class="hint">На этот номер сможет позвонить администратор</p></div>
+    <div class="card question"><h2>Звонки по записи</h2><p>Подтверждение, перенос или отмена приёма. Это не реклама.</p><div class="choices"><button class="choice active" data-group="service" data-value="true">Разрешаю</button><button class="choice no" data-group="service" data-value="false">Не нужно</button></div></div>
+    <div class="card question"><h2>Новости и предложения</h2><p>Необязательная настройка. Не влияет на лечение.</p><div class="choices"><button class="choice" data-group="marketing" data-value="true">Хочу получать</button><button class="choice no active" data-group="marketing" data-value="false">Не хочу</button></div></div>
+    <div id="error" class="error"></div><button id="submit" class="confirm">Подтвердить настройки</button>
+  </section>
+  <section id="success" class="success"><div class="icon">✓</div><h2>Всё готово</h2><p>Настройки связи сохранены.</p><button class="confirm" onclick="closeApp()">Вернуться в бот</button></section>
+</main>
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbyeIUq8NxPxYxiFiznVgCkQuZiNnBRMKUZro185c-cneqMlU2GEHlq1hmA3Sur4JKY/exec';
+const FORM_KEY='nesterov-miniapp-mvp-2026';
+const tg=window.Telegram?.WebApp;const maxApp=window.WebApp;const platform=maxApp?.initData?'max':'telegram';const bridge=platform==='max'?maxApp:tg;
+if(tg&&platform==='telegram'){tg.ready();tg.expand();tg.setHeaderColor('#edf6f3');tg.setBackgroundColor('#edf6f3')}
+function closeApp(){bridge?.close?.()}
+const state={service:true,marketing:false};
+document.querySelectorAll('.choice').forEach(btn=>btn.onclick=()=>{const g=btn.dataset.group;state[g]=btn.dataset.value==='true';document.querySelectorAll(`[data-group="${g}"]`).forEach(x=>x.classList.toggle('active',x===btn));});
+function userId(){return String(bridge?.initDataUnsafe?.user?.id||'')}
+function validName(value){return value.trim().split(/\s+/).length>=2}
+function validPhone(value){return value.replace(/\D/g,'').length>=10}
+document.getElementById('submit').onclick=async()=>{
+  const error=document.getElementById('error'),name=document.getElementById('name').value.trim(),phone=document.getElementById('phone').value.trim(),button=document.getElementById('submit');error.style.display='none';
+  if(!validName(name)){error.textContent='Введите фамилию и имя';error.style.display='block';return}
+  if(!validPhone(phone)){error.textContent='Проверьте номер телефона';error.style.display='block';return}
+  const payload={form_key:FORM_KEY,source:'miniapp',event_id:crypto.randomUUID(),recorded_at:new Date().toISOString(),action:'granted',patient_name:name,phone,service_calls:state.service,marketing_calls:state.marketing,platform,platform_user_id:userId(),consent_version:'mvp-2026-11-12',consent_hash:'miniapp-mvp'};
+  button.disabled=true;button.textContent='Сохраняем…';
+  try{await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});document.getElementById('form').style.display='none';document.getElementById('success').style.display='block';tg?.HapticFeedback?.notificationOccurred('success')}
+  catch(e){error.textContent='Не удалось сохранить. Проверьте интернет и повторите.';error.style.display='block';button.disabled=false;button.textContent='Подтвердить настройки'}
+};
+</script></body></html>
